@@ -6,5 +6,4 @@ The HTML page can be controlled using the following keyboard shortcuts:
 
 D - Show/Hide interface
 + - Increase font size
-- - Decrease font size
-Space - Switch language (Currently, you can switch between Czech and Slovak)
+- - Decrease font sizeSpace - Switch language (Currently, you can switch between Czech and Slovak)

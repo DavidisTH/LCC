@@ -25,11 +25,6 @@
             box-sizing: border-box;
             text-align: center; /* Center initial text */
         }
-        #poweredBy {
-            font-size: 0.5em; /* Smaller font size */
-            color: yellow;
-            margin-top: 10px;
-        }
         #controls {
             display: none; /* Hidden by default */
             margin-top: 20px;
@@ -51,7 +46,6 @@
 </head>
 <body>
     <div id="captions">Listening...</div>
-    <div id="poweredBy">Powered by Web Speech API</div>
     <div id="controls">
         <button onclick="switchLanguage()">Switch Language (Space)</button>
         <button onclick="increaseFontSize()">Increase Font Size (+)</button>
@@ -59,7 +53,6 @@
     </div>
     <script>
         const captionsElement = document.getElementById('captions');
-        const poweredByElement = document.getElementById('poweredBy');
         const controlsElement = document.getElementById('controls');
         let recognition;
         let currentLanguage = localStorage.getItem('language') || 'cs-CZ';
@@ -80,9 +73,6 @@
                 // Display the language name when starting or switching
                 captionsElement.textContent = currentLanguage === 'cs-CZ' ? 'Czech' : 'Slovak';
                 captionsElement.style.textAlign = 'center'; // Center the initial text
-                poweredByElement.style.display = 'block'; // Show the powered by text
-            } else {
-                poweredByElement.style.display = 'none'; // Hide the powered by text during transcription
             }
 
             setTimeout(() => {
@@ -100,7 +90,6 @@
                     captionsElement.textContent = currentText;
                     captionsElement.style.color = 'yellow';
                     captionsElement.style.textAlign = 'left'; // Align generated text to the left
-                    poweredByElement.style.display = 'none'; // Hide the powered by text during transcription
                     
                     setTimeout(() => {
                         captionsElement.scrollTop = captionsElement.scrollHeight;

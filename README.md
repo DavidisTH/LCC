@@ -1,6 +1,6 @@
 # Live Closed Captions
 
-This project provides a web-based live captioning tool that utilizes speech recognition to transcribe spoken language into text in real-time. The interface is designed to be user-friendly, with customizable settings for language selection, font size, and text alignment.
+This project provides a web-based live captioning tool (based on Web speech API) that utilizes speech recognition to transcribe spoken language into text in real-time. The interface is designed to be user-friendly, with customizable settings for language selection, font size, and text alignment.
 
 ## Features
 

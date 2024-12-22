@@ -31,7 +31,7 @@ This project provides a web-based live captioning tool (based on Web speech API)
 
 ## License
 
-This project is open-source and available under the [MIT License](LICENSE).
+This project is open-source and available under the MIT License.
 
 ## Contributing
 
@@ -40,4 +40,10 @@ Contributions are welcome! Please feel free to submit a pull request or open an 
 ## Acknowledgments
 
 - This project uses the Web Speech API for speech recognition.
-- Made with love ❤️.
+
+## Future improvements
+
+- To add an option to automatically recognize spoken language (Unofficial Google Speech engine ???)
+- To add an option to change font color
+
+Made with love ❤️ for those who need it.

@@ -11,7 +11,7 @@ This project provides a web-based live captioning tool (based on Web speech API)
 
 ## Usage
 
-1. **Open the HTML File**: Simply open the `LCC.html` file in a modern web browser that supports speech recognition (e.g., Google Chrome).
+1. **Open the HTML File**: Simply open the `LCC.html` (or the webpage https://davidisth.github.io/LCC/LCC.html) file in a modern web browser that supports speech recognition (e.g., Google Chrome) (see specifications here: https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API).
 2. **Start Captions**: The application will automatically start listening and displaying captions.
 3. **Customize Settings**:
    - Press the **Spacebar** to switch between selected languages.

@@ -40,4 +40,4 @@ Contributions are welcome! Please feel free to submit a pull request or open an 
 ## Acknowledgments
 
 - This project uses the Web Speech API for speech recognition.
-- Made with love ❤️ by David.
+- Made with love ❤️.

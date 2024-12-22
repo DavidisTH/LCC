@@ -17,6 +17,14 @@
             margin: 0;
             flex-direction: column; /* Align items vertically */
         }
+        #captionsContainer {
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center text vertically */
+            align-items: center; /* Center text horizontally */
+            height: 100vh;
+            width: 100%;
+        }
         #captions {
             transition: color 0.5s;
             overflow-y: hidden;
@@ -24,12 +32,48 @@
             width: 100%;
             box-sizing: border-box;
             text-align: center; /* Center initial text */
+            display: flex;
+            justify-content: center; /* Center text horizontally */
+            align-items: center; /* Center text vertically */
         }
-        #controls {
-            display: none; /* Hidden by default */
-            margin-top: 20px;
+        #languageMenu {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            color: white;
+            padding: 0; /* Remove padding to align header at the top */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
         }
-        #controls button {
+        #languageMenu h2 {
+            margin: 0; /* Remove margin */
+            position: sticky;
+            top: 0;
+            background-color: #333;
+            padding: 10px;
+            font-size: 0.6em; /* Slightly larger than the rest of the text */
+            z-index: 10; /* Ensure it stays above other elements */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #languageMenu label {
+            display: block;
+            margin: 5px 0;
+            font-size: 0.5em; /* Match font size with buttons */
+            padding: 0 20px; /* Add padding to align text with header */
+        }
+        #languageMenu input[type="checkbox"] {
+            transform: scale(1.5); /* Increase checkbox size */
+            margin-right: 10px;
+        }
+        #languageMenu button {
             margin: 5px;
             padding: 10px;
             font-size: 0.5em;
@@ -39,29 +83,160 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        #controls button:hover {
+        #languageMenu button:hover {
+            background-color: #555;
+        }
+        #buttonContainer {
+            position: sticky;
+            top: 0;
+            background-color: #333;
+            padding: 10px;
+            z-index: 10;
+        }
+        #notification {
+            display: none;
+            background-color: #444;
+            color: white;
+            padding: 10px;
+            margin-left: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        /* Custom scrollbar styles */
+        #languageMenu::-webkit-scrollbar {
+            width: 12px;
+        }
+        #languageMenu::-webkit-scrollbar-track {
+            background: #444;
+            border-radius: 10px;
+        }
+        #languageMenu::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 10px;
+            border: 3px solid #444;
+        }
+        #languageMenu::-webkit-scrollbar-thumb:hover {
             background-color: #555;
         }
     </style>
 </head>
 <body>
-    <div id="captions">Listening...</div>
-    <div id="controls">
-        <button onclick="switchLanguage()">Switch Language (Space)</button>
-        <button onclick="increaseFontSize()">Increase Font Size (+)</button>
-        <button onclick="decreaseFontSize()">Decrease Font Size (-)</button>
+    <div id="captionsContainer">
+        <div id="captions">Listening...</div>
+    </div>
+    <div id="languageMenu">
+        <h2>
+            Select Languages 
+            <button onclick="toggleMenu()">Close</button>
+            <div id="notification">Settings were changed</div>
+        </h2>
+        <div id="buttonContainer">
+            <button onclick="switchLanguage()">Switch Language (Space)</button>
+            <button onclick="increaseFontSize()">Increase Font Size (+)</button>
+            <button onclick="decreaseFontSize()">Decrease Font Size (-)</button>
+            <button onclick="alignText('left')">Align Text Left</button>
+            <button onclick="alignText('center')">Align Text Center</button>
+            <button onclick="alignText('right')">Align Text Right</button>
+            <button onclick="alignText('top')">Align Text Top</button>
+            <button onclick="alignText('middle')">Align Text Middle</button>
+            <button onclick="alignText('bottom')">Align Text Bottom</button>
+        </div>
+        <div id="languageList"></div>
     </div>
     <script>
         const captionsElement = document.getElementById('captions');
-        const controlsElement = document.getElementById('controls');
+        const captionsContainer = document.getElementById('captionsContainer');
+        const languageMenu = document.getElementById('languageMenu');
+        const languageList = document.getElementById('languageList');
+        const notificationElement = document.getElementById('notification');
         let recognition;
         let currentLanguage = localStorage.getItem('language') || 'cs-CZ';
         let currentText = '';
         let clearTimeoutId;
         let fontSize = parseFloat(localStorage.getItem('fontSize')) || 3; // Retrieve font size from localStorage or default to 3
+        let horizontalAlignment = localStorage.getItem('horizontalAlignment') || 'center';
+        let verticalAlignment = localStorage.getItem('verticalAlignment') || 'middle';
 
-        // Apply the initial font size
+        const languages = [
+            ['Afrikaans', ['af-ZA']],
+            ['Amharic', ['am-ET']],
+            ['Arabic', ['ar-AE', 'ar-BH', 'ar-DZ', 'ar-EG', 'ar-IQ', 'ar-JO', 'ar-KW', 'ar-LB', 'ar-LY', 'ar-MA', 'ar-OM', 'ar-QA', 'ar-SA', 'ar-SY', 'ar-TN', 'ar-YE']],
+            ['Armenian', ['hy-AM']],
+            ['Azerbaijani', ['az-AZ']],
+            ['Bangla', ['bn-BD', 'bn-IN']],
+            ['Basque', ['eu-ES']],
+            ['Bulgarian', ['bg-BG']],
+            ['Catalan', ['ca-ES']],
+            ['Chinese', ['cmn-Hans-CN', 'cmn-Hans-HK', 'cmn-Hant-TW', 'yue-Hant-HK']],
+            ['Croatian', ['hr-HR']],
+            ['Czech', ['cs-CZ']],
+            ['Dansk', ['da-DK']],
+            ['Deutsch', ['de-DE']],
+            ['Dutch', ['nl-NL']],
+            ['English', ['en-AU', 'en-CA', 'en-IN', 'en-KE', 'en-TZ', 'en-GH', 'en-NZ', 'en-NG', 'en-ZA', 'en-PH', 'en-GB', 'en-US']],
+            ['Filipino', ['fil-PH']],
+            ['Finland', ['fi-FI']],
+            ['French', ['fr-FR']],
+            ['Galician', ['gl-ES']],
+            ['Georgian', ['ka-GE']],
+            ['Greek', ['el-GR']],
+            ['Gujarati', ['gu-IN']],
+            ['Hindi', ['hi-IN']],
+            ['Hungarian', ['hu-HU']],
+            ['Icelandic', ['is-IS']],
+            ['Indonesian', ['id-ID']],
+            ['Italian', ['it-IT', 'it-CH']],
+            ['Japanese', ['ja-JP']],
+            ['Javanese', ['jv-ID']],
+            ['Kannada', ['kn-IN']],
+            ['Khmer', ['km-KH']],
+            ['Kiswahili', ['sw-TZ', 'sw-KE']],
+            ['Korean', ['ko-KR']],
+            ['Lao', ['lo-LA']],
+            ['Latvian', ['lv-LV']],
+            ['Lithuanian', ['lt-LT']],
+            ['Malay', ['ms-MY']],
+            ['Malayalam', ['ml-IN']],
+            ['Marathi', ['mr-IN']],
+            ['Myanmar', ['my-MM']],
+            ['Nepali', ['ne-NP']],
+            ['Norwegian Bokmål', ['nb-NO']],
+            ['Polish', ['pl-PL']],
+            ['Portuguese', ['pt-BR', 'pt-PT']],
+            ['Romania', ['ro-RO']],
+            ['Russian', ['ru-RU']],
+            ['Serbian', ['sr-RS']],
+            ['Sinhala', ['si-LK']],
+            ['Slovene', ['sl-SI']],
+            ['Slovak', ['sk-SK']],
+            ['Spanish', ['es-AR', 'es-BO', 'es-CL', 'es-CO', 'es-CR', 'es-EC', 'es-SV', 'es-ES', 'es-US', 'es-GT', 'es-HN', 'es-MX', 'es-NI', 'es-PA', 'es-PY', 'es-PE', 'es-PR', 'es-DO', 'es-UY', 'es-VE']],
+            ['Sundanese', ['su-ID']],
+            ['Swedish', ['sv-SE']],
+            ['Tamil', ['ta-IN', 'ta-SG', 'ta-LK', 'ta-MY']],
+            ['Telugu', ['te-IN']],
+            ['Thai', ['th-TH']],
+            ['Turkish', ['tr-TR']],
+            ['Urdu', ['ur-PK', 'ur-IN']],
+            ['Vietnamese', ['vi-VN']],
+            ['Ukrainian', ['uk-UA']],
+            ['Zulu', ['zu-ZA']]
+        ];
+
+        let selectedLanguages = JSON.parse(localStorage.getItem('selectedLanguages')) || ['cs-CZ', 'sk-SK'];
+
+        // Apply the initial font size and alignment
         captionsElement.style.fontSize = `${fontSize}em`;
+        captionsElement.style.justifyContent = horizontalAlignment;
+        captionsContainer.style.justifyContent = verticalAlignment;
+
+        function getLanguageName(code) {
+            for (const [name, codes] of languages) {
+                if (codes.includes(code)) {
+                    return name;
+                }
+            }
+            return code; // Fallback to code if not found
+        }
 
         function initSpeechRecognition(showLanguage = true) {
             recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -71,7 +246,7 @@
 
             if (showLanguage) {
                 // Display the language name when starting or switching
-                captionsElement.textContent = currentLanguage === 'cs-CZ' ? 'Czech' : 'Slovak';
+                captionsElement.textContent = getLanguageName(currentLanguage);
                 captionsElement.style.textAlign = 'center'; // Center the initial text
             }
 
@@ -98,43 +273,121 @@
                     // Clear the previous timeout
                     clearTimeout(clearTimeoutId);
 
-                    // Set a new timeout to clear the transcript after 2 seconds
+                    // Set a new timeout to clear the transcript after 3 seconds
                     clearTimeoutId = setTimeout(() => {
                         currentText = '';
                         captionsElement.textContent = '';
                         recognition.stop(); // Stop recognition to clear results
                         setTimeout(() => {
                             initSpeechRecognition(false); // Restart recognition without showing language
-                        }, 100); // Small delay to ensure recognition restarts cleanly
-                    }, 2000);
+                        }, 1000); // Increased delay to ensure recognition restarts cleanly
+                    }, 3000); // Timeout increased to 3 seconds
                 }
             };
 
             recognition.onend = () => {
-                recognition.start(); // Restart recognition when it stops
+                setTimeout(() => {
+                    recognition.start(); // Restart recognition with a delay
+                }, 1000); // Delay to prevent rapid toggling
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error detected: ' + event.error);
+                // Optionally, handle specific errors here
             };
         }
 
+        function toggleMenu() {
+            if (languageMenu.style.display === 'none' || languageMenu.style.display === '') {
+                languageMenu.style.display = 'block';
+                languageList.innerHTML = '';
+                languages.forEach(([language, codes]) => {
+                    codes.forEach(code => {
+                        const isChecked = selectedLanguages.includes(code) ? 'checked' : '';
+                        languageList.innerHTML += `
+                            <label>
+                                <input type="checkbox" value="${code}" ${isChecked} onchange="toggleLanguage('${code}', this.checked)">
+                                ${code}
+                            </label>
+                        `;
+                    });
+                });
+            } else {
+                languageMenu.style.display = 'none';
+            }
+        }
+
+        function toggleLanguage(code, isChecked) {
+            if (isChecked) {
+                if (!selectedLanguages.includes(code)) {
+                    selectedLanguages.push(code);
+                }
+            } else {
+                selectedLanguages = selectedLanguages.filter(lang => lang !== code);
+            }
+            localStorage.setItem('selectedLanguages', JSON.stringify(selectedLanguages));
+        }
+
         function switchLanguage() {
-            currentLanguage = currentLanguage === 'cs-CZ' ? 'sk-SK' : 'cs-CZ';
+            const currentIndex = selectedLanguages.indexOf(currentLanguage);
+            const nextIndex = (currentIndex + 1) % selectedLanguages.length;
+            currentLanguage = selectedLanguages[nextIndex];
             localStorage.setItem('language', currentLanguage);
             location.reload();
+            showNotification();
         }
 
         function increaseFontSize() {
             fontSize += 0.2;
             captionsElement.style.fontSize = `${fontSize}em`;
             localStorage.setItem('fontSize', fontSize); // Save font size to localStorage
+            showNotification();
         }
 
         function decreaseFontSize() {
             fontSize = Math.max(0.2, fontSize - 0.2);
             captionsElement.style.fontSize = `${fontSize}em`;
             localStorage.setItem('fontSize', fontSize); // Save font size to localStorage
+            showNotification();
         }
 
-        function toggleControls() {
-            controlsElement.style.display = controlsElement.style.display === 'none' ? 'block' : 'none';
+        function alignText(position) {
+            switch (position) {
+                case 'left':
+                    captionsElement.style.justifyContent = 'flex-start';
+                    horizontalAlignment = 'flex-start';
+                    break;
+                case 'center':
+                    captionsElement.style.justifyContent = 'center';
+                    horizontalAlignment = 'center';
+                    break;
+                case 'right':
+                    captionsElement.style.justifyContent = 'flex-end';
+                    horizontalAlignment = 'flex-end';
+                    break;
+                case 'top':
+                    captionsContainer.style.justifyContent = 'flex-start';
+                    verticalAlignment = 'flex-start';
+                    break;
+                case 'middle':
+                    captionsContainer.style.justifyContent = 'center';
+                    verticalAlignment = 'center';
+                    break;
+                case 'bottom':
+                    captionsContainer.style.justifyContent = 'flex-end';
+                    verticalAlignment = 'flex-end';
+                    break;
+            }
+            localStorage.setItem('horizontalAlignment', horizontalAlignment);
+            localStorage.setItem('verticalAlignment', verticalAlignment);
+            showNotification();
+        }
+
+        function showNotification() {
+            notificationElement.style.display = 'block';
+            setTimeout(() => {
+                notificationElement.style.display = 'none';
+            }, 2000); // Display notification for 2 seconds
         }
 
         initSpeechRecognition();
@@ -146,8 +399,8 @@
                 increaseFontSize();
             } else if (event.key === '-') {
                 decreaseFontSize();
-            } else if (event.key.toLowerCase() === 'd') {
-                toggleControls();
+            } else if (event.key.toLowerCase() === 'm') {
+                toggleMenu();
             }
         });
     </script>

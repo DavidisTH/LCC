@@ -37,6 +37,6 @@ Contributions are welcome! Please feel free to submit a pull request or open an 
 This project uses the Web Speech API for speech recognition.
 
 ## Future Improvements
-- To add an option to automatically recognize spoken language (Unofficial Google Speech engine ???). This would be super perfect.
+- To add an option to automatically recognize spoken language when 'D' key is pressed (Unofficial Google Speech engine ???). This would be super perfect.
 
 Made with love ❤️ for those who need it.

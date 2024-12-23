@@ -118,6 +118,42 @@
         #languageMenu::-webkit-scrollbar-thumb:hover {
             background-color: #555;
         }
+        :fullscreen {
+            cursor: none; /* Hide the cursor in fullscreen mode */
+        }
+        /* For browsers that use different pseudo-classes */
+        :-webkit-full-screen {
+            cursor: none;
+        }
+        :-moz-full-screen {
+            cursor: none;
+        }
+        :-ms-fullscreen {
+            cursor: none;
+        }
+        /* Add styles for the menu buttons container */
+        .menu-buttons {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            margin-bottom: 10px;
+        }
+        
+        .menu-buttons button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 10px;
+            font-size: 0.5em;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .menu-buttons button:hover {
+            background-color: #555;
+        }
     </style>
 </head>
 <body>
@@ -130,17 +166,6 @@
             <button onclick="toggleMenu()">Close</button>
             <div id="notification">Settings were changed</div>
         </h2>
-        <div id="buttonContainer">
-            <button onclick="switchLanguage()">Switch Language (Space)</button>
-            <button onclick="increaseFontSize()">Increase Font Size (+)</button>
-            <button onclick="decreaseFontSize()">Decrease Font Size (-)</button>
-            <button onclick="alignText('left')">Align Text Left</button>
-            <button onclick="alignText('center')">Align Text Center</button>
-            <button onclick="alignText('right')">Align Text Right</button>
-            <button onclick="alignText('top')">Align Text Top</button>
-            <button onclick="alignText('middle')">Align Text Middle</button>
-            <button onclick="alignText('bottom')">Align Text Bottom</button>
-        </div>
         <div id="languageList"></div>
     </div>
     <script>
@@ -229,6 +254,9 @@
         captionsElement.style.justifyContent = horizontalAlignment;
         captionsContainer.style.justifyContent = verticalAlignment;
 
+        const captionColors = ['white', 'yellow', 'cyan', 'lime', 'fuchsia'];
+        let currentColorIndex = captionColors.indexOf(localStorage.getItem('captionColor')) || 0;
+
         function getLanguageName(code) {
             for (const [name, codes] of languages) {
                 if (codes.includes(code)) {
@@ -263,8 +291,7 @@
                 if (transcript !== currentText) {
                     currentText = transcript;
                     captionsElement.textContent = currentText;
-                    captionsElement.style.color = 'yellow';
-                    captionsElement.style.textAlign = 'left'; // Align generated text to the left
+                    captionsElement.style.textAlign = 'left';
                     
                     setTimeout(() => {
                         captionsElement.scrollTop = captionsElement.scrollHeight;
@@ -277,11 +304,7 @@
                     clearTimeoutId = setTimeout(() => {
                         currentText = '';
                         captionsElement.textContent = '';
-                        recognition.stop(); // Stop recognition to clear results
-                        setTimeout(() => {
-                            initSpeechRecognition(false); // Restart recognition without showing language
-                        }, 1000); // Increased delay to ensure recognition restarts cleanly
-                    }, 3000); // Timeout increased to 3 seconds
+                    }, 3000);
                 }
             };
 
@@ -300,7 +323,23 @@
         function toggleMenu() {
             if (languageMenu.style.display === 'none' || languageMenu.style.display === '') {
                 languageMenu.style.display = 'block';
-                languageList.innerHTML = '';
+                languageList.innerHTML = `
+                    <!-- Add buttons at the top of the language list -->
+                    <div class="menu-buttons">
+                        <button onclick="switchLanguage()">Switch Language (Space)</button>
+                        <button onclick="increaseFontSize()">Increase Font Size (+)</button>
+                        <button onclick="decreaseFontSize()">Decrease Font Size (-)</button>
+                        <button onclick="alignText('left')">Align Text Left</button>
+                        <button onclick="alignText('center')">Align Text Center</button>
+                        <button onclick="alignText('right')">Align Text Right</button>
+                        <button onclick="alignText('top')">Align Text Top</button>
+                        <button onclick="alignText('middle')">Align Text Middle</button>
+                        <button onclick="alignText('bottom')">Align Text Bottom</button>
+                        <button onclick="changeCaptionColor()">Change Caption Color (C)</button>
+                    </div>
+                `;
+                
+                // Add language checkboxes after the buttons
                 languages.forEach(([language, codes]) => {
                     codes.forEach(code => {
                         const isChecked = selectedLanguages.includes(code) ? 'checked' : '';
@@ -383,6 +422,17 @@
             showNotification();
         }
 
+        function changeCaptionColor() {
+            currentColorIndex = (currentColorIndex + 1) % captionColors.length;
+            const newColor = captionColors[currentColorIndex];
+            captionsElement.style.color = newColor;
+            localStorage.setItem('captionColor', newColor); // Save color to localStorage
+            showNotification();
+        }
+
+        // Apply the initial caption color
+        captionsElement.style.color = captionColors[currentColorIndex];
+
         function showNotification() {
             notificationElement.style.display = 'block';
             setTimeout(() => {
@@ -401,8 +451,27 @@
                 decreaseFontSize();
             } else if (event.key.toLowerCase() === 'm') {
                 toggleMenu();
+            } else if (event.key.toLowerCase() === 'c') {
+                changeCaptionColor();
             }
         });
+
+        let mouseMoveTimeout;
+
+        function hideCursor() {
+            document.body.style.cursor = 'none';
+        }
+
+        function showCursor() {
+            document.body.style.cursor = 'default';
+            clearTimeout(mouseMoveTimeout);
+            mouseMoveTimeout = setTimeout(hideCursor, 2000); // Hide cursor after 2 seconds of inactivity
+        }
+
+        document.addEventListener('mousemove', showCursor);
+
+        // Initially hide the cursor after 2 seconds
+        mouseMoveTimeout = setTimeout(hideCursor, 2000);
     </script>
 </body>
 </html>

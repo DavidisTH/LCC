@@ -304,6 +304,10 @@
                     clearTimeoutId = setTimeout(() => {
                         currentText = '';
                         captionsElement.textContent = '';
+                        recognition.stop();
+                        setTimeout(() => {
+                            initSpeechRecognition(false);
+                        }, 1000);
                     }, 3000);
                 }
             };

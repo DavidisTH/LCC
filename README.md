@@ -14,7 +14,7 @@ This project provides a web-based `live captioning` tool (based on the `Web Spee
 - **Dual Caption Display**: View both original speech and translated text simultaneously when translation is enabled.
 
 ## Usage
-1. Open the HTML File: Simply open the `LCC.html` (or the webpage https://davidisth.github.io/LCC/LCC.html) file in a modern web browser that supports `speech recognition` (e.g., `Google Chrome`) (see specifications here: `Web Speech API`).
+1. Open the HTML File: Simply open the `LCC.html` (or the webpage https://davidisth.github.io/LCC/LCC.html / https://davidisth.github.io/LCC/LCC2.html) file in a modern web browser that supports `speech recognition` (e.g., `Google Chrome`) (see specifications here: `Web Speech API`).
 2. Start Captions: The application will automatically start listening and displaying captions.
 3. Customize Settings:
    - Press the `Spacebar` to switch between selected languages.
@@ -47,6 +47,6 @@ Contributions are welcome! Please feel free to submit a pull request or open an 
 - Translation powered by the `unofficial Google Translate API`.
 
 ## Future Improvements
-- Enhance translation stability and performance - to greyout old text and colorize only newly added
+- Enhance translation stability and performance
 
 Made with love ❤️ for those who need it.

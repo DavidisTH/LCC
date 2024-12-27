@@ -27,28 +27,24 @@
             position: relative;
             margin: 0;
             padding: 0;
+            text-align: inherit; /* This will help with alignment inheritance */
         }
         #captions {
             transition: color 0.5s;
             overflow-y: hidden;
             width: 100%;
             box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            padding: 0;
+            padding: 0; /* Remove the padding */
             margin: 0;
+            display: block;
         }
         #translatedCaptions {
-            transition: color 0.5s;
-            overflow-y: hidden;
+            transition: all 0.3s ease;
+            height: 0;
+            padding: 0;
+            overflow: hidden;
             width: 100%;
             box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            padding: 0;
-            margin: 0;
         }
         #languageMenu {
             display: none;
@@ -173,14 +169,14 @@
             height: 50vh !important;
             position: absolute;
             top: 0;
-            padding: 10px;
+            padding: 0; /* Ensure no padding here */
             box-sizing: border-box;
         }
         .translation-mode #translatedCaptions {
             height: 50vh !important;
             position: absolute;
             bottom: 0;
-            padding: 10px;
+            padding: 0; /* Ensure no padding here */
             box-sizing: border-box;
         }
     </style>
@@ -220,6 +216,7 @@
         let translatedColorIndex = captionColors.indexOf(translatedCaptionsColor);
         let currentColorIndex = captionColors.indexOf(localStorage.getItem('captionColor')) || 0;
         let translationTimeout;
+        let pageReloadTimeout;
 
         const languages = [
             ['Afrikaans', ['af-ZA']],
@@ -302,16 +299,31 @@
             return code; // Fallback to code if not found
         }
 
+        function setupPageReload() {
+            // Clear any existing timeout
+            if (pageReloadTimeout) {
+                clearTimeout(pageReloadTimeout);
+            }
+            
+            // Set new timeout for 15 minutes (900000 milliseconds)
+            pageReloadTimeout = setTimeout(() => {
+                location.reload();
+            }, 900000);
+        }
+
         function initSpeechRecognition(showLanguage = true) {
             recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = currentLanguage;
             recognition.interimResults = true;
             recognition.continuous = true;
 
+            // Set up the page reload timer
+            setupPageReload();
+
             if (showLanguage) {
-                // Display the language name when starting or switching
+                captionsElement.style.display = 'block';
                 captionsElement.textContent = getLanguageName(currentLanguage);
-                captionsElement.style.textAlign = 'center'; // Center the initial text
+                captionsElement.style.textAlign = horizontalAlignment; // Use stored alignment
             }
 
             setTimeout(() => {
@@ -319,15 +331,24 @@
             }, showLanguage ? 1000 : 0); // Delay only if showing language name
 
             recognition.onresult = async (event) => {
-                const transcript = Array.from(event.results)
-                    .map(result => result[0])
-                    .map(result => result.transcript)
-                    .join('');
+                let interimTranscript = '';
+                let finalTranscript = '';
 
-                if (transcript !== currentText) {
-                    currentText = transcript;
-                    captionsElement.textContent = currentText;
-                    captionsElement.style.textAlign = 'left';
+                // Process all results
+                for (let i = 0; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                if (finalTranscript !== currentText || interimTranscript !== '') {
+                    currentText = finalTranscript;
+                    // Display both final and interim text in a single line
+                    captionsElement.style.display = 'block';
+                    captionsElement.innerHTML = `<span style="color: white">${finalTranscript}</span><span style="color: ${captionColors[currentColorIndex]}">${interimTranscript}</span>`;
+                    captionsElement.style.textAlign = horizontalAlignment; // Use stored alignment instead of 'left'
 
                     if (translationEnabled) {
                         // Clear any pending translation update
@@ -335,16 +356,27 @@
                         
                         // Set a new timeout for translation
                         translationTimeout = setTimeout(async () => {
-                            translatedText = await gtranslate(currentText, currentLanguage.split('-')[0], translationLanguage);
+                            const textToTranslate = finalTranscript + interimTranscript;
+                            translatedText = await gtranslate(textToTranslate, currentLanguage.split('-')[0], translationLanguage);
                             const translatedCaptions = document.getElementById('translatedCaptions');
-                            translatedCaptions.textContent = translatedText;
-                            translatedCaptions.style.textAlign = 'left';
+                            translatedCaptions.style.display = 'block';
+                            translatedCaptions.style.textAlign = horizontalAlignment; // Use stored alignment here too
+                            
+                            // Calculate the approximate split point for translation
+                            const ratio = finalTranscript.length / textToTranslate.length;
+                            const splitPoint = Math.floor(translatedText.length * ratio);
+                            
+                            // Split the translated text into final and interim parts
+                            const translatedFinal = translatedText.substring(0, splitPoint);
+                            const translatedInterim = translatedText.substring(splitPoint);
+                            
+                            translatedCaptions.innerHTML = `<span style="color: aquamarine">${translatedFinal}</span><span style="color: ${translatedCaptionsColor}">${translatedInterim}</span>`;
 
                             // Scroll handling for translated captions
                             if (translatedCaptions.scrollHeight > translatedCaptions.clientHeight) {
                                 translatedCaptions.scrollTop = translatedCaptions.scrollHeight;
                             }
-                        }, 450); // Changed from 1000 to 450ms delay before updating translation
+                        }, 450);
                     }
 
                     // Ensure smooth scrolling behavior
@@ -353,18 +385,6 @@
                             captionsElement.scrollTop = captionsElement.scrollHeight;
                         }
                     });
-
-                    clearTimeout(clearTimeoutId);
-                    clearTimeoutId = setTimeout(() => {
-                        currentText = '';
-                        translatedText = '';
-                        captionsElement.textContent = '';
-                        document.getElementById('translatedCaptions').textContent = '';
-                        recognition.stop();
-                        setTimeout(() => {
-                            initSpeechRecognition(false);
-                        }, 1000);
-                    }, 3000);
                 }
             };
 
@@ -479,13 +499,11 @@
                 case 'left':
                 case 'center':
                 case 'right':
-                    captionsElement.style.justifyContent = position === 'left' ? 'flex-start' : 
-                                                         position === 'right' ? 'flex-end' : 'center';
+                    captionsElement.style.textAlign = position;
                     if (document.getElementById('translatedCaptions')) {
-                        document.getElementById('translatedCaptions').style.justifyContent = 
-                            captionsElement.style.justifyContent;
+                        document.getElementById('translatedCaptions').style.textAlign = position;
                     }
-                    horizontalAlignment = captionsElement.style.justifyContent;
+                    horizontalAlignment = position;
                     break;
                 case 'top':
                 case 'middle':
@@ -537,13 +555,16 @@
             
             if (translationEnabled) {
                 captionsContainer.classList.add('translation-mode');
-                translatedCaptions.style.display = 'flex';
+                translatedCaptions.style.display = 'block';
                 translatedCaptions.style.fontSize = `${fontSize}em`;
                 translatedCaptions.style.color = translatedCaptionsColor;
-                translatedCaptions.style.justifyContent = horizontalAlignment;
+                translatedCaptions.style.textAlign = horizontalAlignment;
             } else {
                 captionsContainer.classList.remove('translation-mode');
                 translatedCaptions.style.display = 'none';
+                translatedCaptions.textContent = ''; // Clear the content
+                translatedCaptions.style.height = '0'; // Force height to 0
+                translatedCaptions.style.padding = '0'; // Remove any padding
             }
             showNotification();
         }
